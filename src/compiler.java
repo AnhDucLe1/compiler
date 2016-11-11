@@ -24,12 +24,17 @@ public class compiler {
 	static Map<String,Set<String>> followSet = new LinkedHashMap<>();
 	static Map<String,Set<String>> followList = new LinkedHashMap<>();
 	static String startSymbol;
+	static Set<String> stateSet = new LinkedHashSet<String>();
+	static Set<String> innerStateSet = new LinkedHashSet<String>();
+	static Map<String,Set<String>> innerMap = new LinkedHashMap<>();
+	static Map<Set <String>, Map<String,Set<String>> > SLR = new LinkedHashMap<>();
 	static List<ProductionGrammar> production = new ArrayList<ProductionGrammar>();
 
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub		
 		
+
 		readFromBuffer("GrammarList.txt", grammarList);
 		readFromBuffer("nonTerminalList.txt", nonTerminal);
 		readFromBuffer("terminalList.txt", terminal);
@@ -84,10 +89,19 @@ public class compiler {
 			System.out.print("\n");
 		}
 		*/
+		for (int i = 0; i < grammarList.size() ; i ++)
+		{
+            System.out.println(grammarList.get(i));  
+
+		}
+		createSLR();
 		
 	}
 	
-	
+	public static void createSLR()
+	{
+		
+	}
 	public static void buildTheFollow()
 	{
 		//create empty set
@@ -384,7 +398,8 @@ public class compiler {
  public static void printToTextFile(Map<String,Set<String>> mapPrintout, String nameoftheText)
  {
 	 try {
-		 String path = "C:\\Users\\Duc Le\\Desktop\\Compiler\\" ;
+		 // put the path for folder you want to create
+		 String path = "C:\\Users\\Duc\\Desktop\\Compiler\\" ;
 		 path = path.concat(nameoftheText);
 		 path = path.concat(".txt");
 		 File file = new File(path);
