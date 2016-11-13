@@ -25,10 +25,10 @@ public class compiler {
 	static Map<String,Set<String>> followList = new LinkedHashMap<>();
 	static String startSymbol;
 	static Set<String> stateSet = new LinkedHashSet<String>();
-	static Set<String> innerStateSet = new LinkedHashSet<String>();
-	static Map<String,Set<String>> innerMap = new LinkedHashMap<>();
-	static Map<Set <String>, Map<String,Set<String>> > SLR = new LinkedHashMap<>();
+	static Map<Set <List<String>>, Map<String,Set<List<String>>> > SLR = new LinkedHashMap<>();
 	static List<ProductionGrammar> production = new ArrayList<ProductionGrammar>();
+	static List<ProductionGrammar> slrProduction = new ArrayList<ProductionGrammar>();
+
 
 
 	public static void main(String[] args) {
@@ -50,15 +50,7 @@ public class compiler {
 			System.out.print("RightSide: "+ production.get(j).getRightSide().get(k));
 			System.out.print("\n");
 		} */
-		for (int i = 0 ; i < production.size(); i ++)
-		{			
-			List<String> test;
-			test = production.get(i).getRightSide();
-            //System.out.println("Left side:" + production.get(i).getLeftSide() + " :: ");  
-			for(int j =0;j < test.size();j++){
-			    //System.out.println(test.get(j));
-			} 
-		}
+		
 		buildTheFirst();
 		printToTextFile(firstSet, "First");
 		/*
@@ -89,18 +81,161 @@ public class compiler {
 			System.out.print("\n");
 		}
 		*/
+		//create new SLR production add state 0
+		
+		
 		for (int i = 0; i < grammarList.size() ; i ++)
 		{
-            System.out.println(grammarList.get(i));  
+           // System.out.println(grammarList.get(i));  
 
 		}
+		createSLRproduction();
 		createSLR();
-		
+		createSLRmap();
 	}
-	
-	public static void createSLR()
+	public static void createSLRmap()
+	{
+		Set<List<String>> stateSet = new LinkedHashSet<List<String>>();
+		
+		
+		//make the list of item what will go
+		Set<String> tempSet = new LinkedHashSet<String>();
+		for( int j = 0; j < slrProduction.size() ; j ++)
+		{
+			List<String> newList = new ArrayList<String>();
+			newList.add(slrProduction.get(j).getLeftSide());
+			newList.addAll(slrProduction.get(j).getRightSide());
+			stateSet.add(newList);
+			//index for the .
+			int indexTemp = slrProduction.get(j).getRightSide().indexOf(".");
+			{
+				if ( indexTemp != slrProduction.get(j).getRightSide().size()-1 )
+				{
+					tempSet.add(slrProduction.get(j).getRightSide().get(indexTemp+1));
+				}
+			}
+		}
+		SLR.put(stateSet, null);
+		
+		slrRecurrsion();
+	}
+	public static void slrRecurrsion()
 	{
 		
+	}
+	public static void createSLR()
+	{
+		int i = 0;
+		do 
+		{
+			if (i == 0)
+			{
+				//set up state 0 look like this ( p . l )first one is the left side
+				Set<List<String>> stateSet = new LinkedHashSet<List<String>>();
+				
+				
+				//make the list of item what will go
+				Set<String> tempSet = new LinkedHashSet<String>();
+				for( int j = 0; j < slrProduction.size() ; j ++)
+				{
+					List<String> newList = new ArrayList<String>();
+					newList.add(slrProduction.get(j).getLeftSide());
+					newList.addAll(slrProduction.get(j).getRightSide());
+					stateSet.add(newList);
+					//index for the .
+					int indexTemp = slrProduction.get(j).getRightSide().indexOf(".");
+					{
+						if ( indexTemp != slrProduction.get(j).getRightSide().size()-1 )
+						{
+							tempSet.add(slrProduction.get(j).getRightSide().get(indexTemp+1));
+						}
+					}
+				}
+				SLR.put(stateSet, null);
+				//create those state with the list of Terminal and Nonterminal we got					
+				System.out.println("////////");
+				System.out.println(tempSet.size());
+				Map<String,Set<List<String>>> innerMap = new LinkedHashMap<>();			
+				for (String s : tempSet) 
+				{
+					Set<List<String>> innerStateSet = new LinkedHashSet<List<String>>();
+					for (List<String> L : stateSet) 
+					{
+						int index = L.indexOf(".") ;
+						if (index != L.size()-1)
+						{
+							if (L.get(index+1).equals(s))
+							{
+								List<String> tempList = new ArrayList<String>();
+								for(int t = 0 ; t < L.size(); t ++)
+								{
+									tempList.add(t, L.get(t));
+								}
+								tempList.set(index, L.get(index +1));
+								tempList.set(index+1,".");
+								innerStateSet.add(tempList);	
+							}
+						}
+					}
+					innerMap.put(s, innerStateSet);
+					System.out.println("-------------------------1--------------------");
+
+					for (List<String> K : innerStateSet)
+					{
+						System.out.println(K);
+					}
+					SLR.put(innerStateSet, null);
+				}
+				//modify the intial state
+
+				
+				SLR.put(stateSet, innerMap);
+
+				
+				
+				
+				System.out.println(SLR.size());
+
+			}
+			else
+			{
+				
+			}
+			i ++;
+		}
+		while (i < 2);
+	}
+	public static void createSLRproduction()
+	{
+		List<String> tempList = new ArrayList<String>();
+		String intial;
+		tempList.add(".");
+		tempList.add(production.get(0).getLeftSide());
+		intial = production.get(0).getLeftSide();
+		intial = intial.concat("\'");
+        ProductionGrammar pg = new ProductionGrammar(intial, tempList);
+		slrProduction.add(pg);
+		for (int i = 0 ; i < production.size(); i ++)
+		{	
+				List<String> tempList1 = new ArrayList<String>();
+				tempList1.add(".");
+				for(int j =0;j < production.get(i).getRightSide().size();j++)
+				{
+					tempList1.add(production.get(i).getRightSide().get(j));
+				} 
+	            ProductionGrammar pg1 = new ProductionGrammar(production.get(i).getLeftSide(), tempList1);
+	            slrProduction.add(pg1);
+		}
+		
+		for (int i = 0 ; i < slrProduction.size(); i ++)
+		{			
+			List<String> test;
+			test = slrProduction.get(i).getRightSide();
+            System.out.println("Left side:" + slrProduction.get(i).getLeftSide() + " :: ");  
+			for(int j =0;j < test.size();j++){
+			   System.out.println(test.get(j));
+			} 
+		}
 	}
 	public static void buildTheFollow()
 	{
@@ -114,20 +249,20 @@ public class compiler {
 		}
 		
 		buildSetFollow(production);
-		buildFollow();
+		//buildFollow();
 		for(int j = 0; j < nonTerminal.size(); j++)
 		{
 			String currentNonTerminal = nonTerminal.get(j);
 			Set<String> duplicate = new LinkedHashSet<String>();
 			buildfollowRecursive(currentNonTerminal, currentNonTerminal,duplicate);
 		}
-		System.out.println("----------Final Product------------------");
+		//System.out.println("----------Final Product------------------");
 
 		for (String name: followSet.keySet())
 		{
          String key = name.toString();
          String value = followSet.get(name).toString();  
-         System.out.println(key + " :: " + value);  
+        // System.out.println(key + " :: " + value);  
 		} 
 		
 		
@@ -185,14 +320,14 @@ public class compiler {
 		{
          String key = name.toString();
          String value = followSet.get(name).toString();  
-         System.out.println(key + " :: " + value);  
+        // System.out.println(key + " :: " + value);  
 		} 
 		System.out.println("-------------------------------");
 		for (String name: followList.keySet())
 		{
          String key = name.toString();
          String value = followList.get(name).toString();  
-         System.out.println(key + " :: " + value);  
+        // System.out.println(key + " :: " + value);  
 		} 
 		
 		
@@ -214,7 +349,7 @@ public class compiler {
 				//check if it was nonterminal and last character. if it does than add the follow of the left side production
 				if(nonTerminal.contains(tempProduction.get(i).getRightSide().get(j)) && j== tempProduction.get(i).getRightSide().size()-1)
 				{
-					System.out.println("This is for Nontermial:"+ tempProduction.get(i).getRightSide().get(j));
+					//System.out.println("This is for Nontermial:"+ tempProduction.get(i).getRightSide().get(j));
 					Set<String> newSet = new LinkedHashSet<String>();					
 					newSet.addAll(followList.get(tempProduction.get(i).getRightSide().get(j)));
 					newSet.add(tempProduction.get(i).getLeftSide());
@@ -226,16 +361,16 @@ public class compiler {
 				{
 					if(nonTerminal.contains(tempProduction.get(i).getRightSide().get(j)))
 					{
-						System.out.println("This is for Nontermial 2:"+ tempProduction.get(i).getRightSide().get(j));
+						//System.out.println("This is for Nontermial 2:"+ tempProduction.get(i).getRightSide().get(j));
 						boolean allNTMempty = true;
 						for(int k = j+1; k < tempProduction.get(i).getRightSide().size(); k ++ )
 						{
 							//if the next one is terminal
-							System.out.println(">>>>>>>>>>>>>>>>>:"+ tempProduction.get(i).getRightSide().get(k));
+							//System.out.println(">>>>>>>>>>>>>>>>>:"+ tempProduction.get(i).getRightSide().get(k));
 
 							if(terminal.contains(tempProduction.get(i).getRightSide().get(k)))
 							{
-								System.out.println("This is for Terminal 2:"+ tempProduction.get(i).getRightSide().get(k));
+								//System.out.println("This is for Terminal 2:"+ tempProduction.get(i).getRightSide().get(k));
 								Set<String> newSet = new LinkedHashSet<String>();
 								newSet = followSet.get(tempProduction.get(i).getRightSide().get(j));
 								newSet.add(tempProduction.get(i).getRightSide().get(k));							
@@ -246,7 +381,7 @@ public class compiler {
 							//
 							else
 							{
-								System.out.println("This is for Nontermial Inside:"+ tempProduction.get(i).getRightSide().get(k));
+								//System.out.println("This is for Nontermial Inside:"+ tempProduction.get(i).getRightSide().get(k));
 
 								Set<String> newSet = new LinkedHashSet<String>();
 								newSet = followSet.get(tempProduction.get(i).getRightSide().get(j));
