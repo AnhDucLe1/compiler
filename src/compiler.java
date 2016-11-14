@@ -25,6 +25,7 @@ public class compiler {
 	static Map<String,Set<String>> followList = new LinkedHashMap<>();
 	static String startSymbol;
 	static Set<String> stateSet = new LinkedHashSet<String>();
+	static List<Set<List<String>>> stateList = new ArrayList<Set<List<String>>>();
 	static Map<Set <List<String>>, Map<String,Set<List<String>>> > SLR = new LinkedHashMap<>();
 	static List<ProductionGrammar> production = new ArrayList<ProductionGrammar>();
 	static List<ProductionGrammar> slrProduction = new ArrayList<ProductionGrammar>();
@@ -115,13 +116,32 @@ public class compiler {
 				}
 			}
 		}
-		SLR.put(stateSet, null);
-		
-		slrRecurrsion();
+		stateList.add(stateSet);
+		int i = 0;
+		while (i < stateList.size())
+		{
+			//working set
+			Set<List<String>> currentWorkingSet = new LinkedHashSet<List<String>>();
+			//Map <String, Set<List<String>>> returnMap = new LinkedHashMap <String, Set<List<String>>>();
+
+			currentWorkingSet = stateList.get(i);
+			SLR.put(currentWorkingSet,slrRecurrsion(currentWorkingSet));
+			i++;
+		}
 	}
-	public static void slrRecurrsion()
+	
+	public static Map<String,Set<List<String>>> slrRecurrsion (Set<List<String>> currentWorkingSet)
 	{
+		Map <String, Set<List<String>>> stateMap = new LinkedHashMap <String, Set<List<String>>>();
+		Set<List<String>> innerSet = new LinkedHashSet <List<String>>();
+		List<String> tempListForSet = new ArrayList<String>();
 		
+		for(List<String> s : currentWorkingSet)
+		{
+			
+		}
+		
+ 		return stateMap;
 	}
 	public static void createSLR()
 	{
