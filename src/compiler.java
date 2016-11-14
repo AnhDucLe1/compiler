@@ -26,7 +26,7 @@ public class compiler {
 	static String startSymbol;
 	static Set<String> stateSet = new LinkedHashSet<String>();
 	static List<Set<List<String>>> stateList = new ArrayList<Set<List<String>>>();
-	static Map<Set <List<String>>, Map<String,Set<List<String>>> > SLR = new LinkedHashMap<>();
+	static Map<Set <List<String>>, Map<String, Integer> > SLR = new LinkedHashMap<>();
 	static List<ProductionGrammar> production = new ArrayList<ProductionGrammar>();
 	static List<ProductionGrammar> slrProduction = new ArrayList<ProductionGrammar>();
 
@@ -91,7 +91,7 @@ public class compiler {
 
 		}
 		createSLRproduction();
-		createSLR();
+		//createSLR();
 		createSLRmap();
 	}
 	public static void createSLRmap()
@@ -123,26 +123,74 @@ public class compiler {
 			//working set
 			Set<List<String>> currentWorkingSet = new LinkedHashSet<List<String>>();
 			//Map <String, Set<List<String>>> returnMap = new LinkedHashMap <String, Set<List<String>>>();
-
+			
 			currentWorkingSet = stateList.get(i);
+			System.out.println(currentWorkingSet);
 			SLR.put(currentWorkingSet,slrRecurrsion(currentWorkingSet));
 			i++;
 		}
 	}
 	
-	public static Map<String,Set<List<String>>> slrRecurrsion (Set<List<String>> currentWorkingSet)
+	public static Map<String,Integer> slrRecurrsion (Set<List<String>> currentWorkingSet)
 	{
-		Map <String, Set<List<String>>> stateMap = new LinkedHashMap <String, Set<List<String>>>();
+		Map <String, Integer> stateMap = new LinkedHashMap <String,Integer>();
 		Set<List<String>> innerSet = new LinkedHashSet <List<String>>();
-		List<String> tempListForSet = new ArrayList<String>();
-		
+		List<String> tempListForMove = new ArrayList <String>();
+		//create the List for possible moving terminal and nonTerminal
 		for(List<String> s : currentWorkingSet)
 		{
-			
+			//access each element of the list
+			int indexOfPeriod = s.indexOf(".");
+			if ( indexOfPeriod < s.size()-1)
+			{
+				if(!tempListForMove.contains(s.get(indexOfPeriod+1)))
+				{
+					tempListForMove.add(s.get(indexOfPeriod+1));
+				}
+			}			
 		}
+		
+		//make the set in to List of because Set filter out duplicate and List
+		
+		for (int i = 0 ; i < tempListForMove.size(); i ++)
+		{
+			Set<List<String>> tempSet = new LinkedHashSet<List<String>>();
+			
+			for(List<String> s : currentWorkingSet)
+			{				
+				int indexOfPeriod = s.indexOf(".");
+				if( (s.size()-1 - indexOfPeriod) > 0 && s.get(indexOfPeriod+1).equals(tempListForMove.get(i)))
+				{
+					List<String> tempList = new ArrayList<String> ();
+					for (String tempString : s)
+					{
+						tempList.add(tempString);
+					}
+					//swap the value of period and next value
+					tempList.set(indexOfPeriod, tempList.get(indexOfPeriod+1));
+					tempList.set(indexOfPeriod +1, ".");
+					tempSet.add(tempList);
+					//if after the Period is a Nontermial
+					if((s.size()-1 - indexOfPeriod) > 1 && nonTerminal.contains(s.get(indexOfPeriod +2)))
+					{		
+						tempList = recursionSLRstate(tempList,s.get(indexOfPeriod+2));
+					}										
+				}
+				
+			}
+		}
+		System.out.println(tempListForMove.size());
 		
  		return stateMap;
 	}
+	//this recreate more state if the . before the nonTerminal
+	public Set<List<String>> recursionSLRstate (Set<List<String>> tempList, String CurrentNonTerminal)
+	{
+		
+		
+		return tempList;
+	}
+	/*
 	public static void createSLR()
 	{
 		int i = 0;
@@ -225,6 +273,7 @@ public class compiler {
 		}
 		while (i < 2);
 	}
+	*/
 	public static void createSLRproduction()
 	{
 		List<String> tempList = new ArrayList<String>();
