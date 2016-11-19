@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,7 +30,7 @@ public class compiler {
 	static Map<Integer, Map<String, Integer> > SLR = new LinkedHashMap<>();
 	static List<ProductionGrammar> production = new ArrayList<ProductionGrammar>();
 	static List<ProductionGrammar> slrProduction = new ArrayList<ProductionGrammar>();
-
+	static Map<Integer, List<SLRtable>> slrTable = new LinkedHashMap<Integer, List<SLRtable>>();
 
 
 	public static void main(String[] args) {
@@ -101,27 +102,68 @@ public class compiler {
 		}
 		for (Integer entry: SLR.keySet())
 		{
+			List<SLRtable> listSLRtable = new ArrayList<SLRtable>();
             String key = entry.toString();
             System.out.println("----------------------------State " +key +"--------------------------------");  
             Map<String,Integer> tempMap = new  LinkedHashMap<String,Integer> ();
             tempMap = SLR.get(entry);
             for(String S : tempMap.keySet())
             {
+            	String command;
+            	int tempInt;
             	String key1 = S.toString();
                 String value = tempMap.get(key1).toString();  
-                System.out.println("Symbol: " +key1);
+               // System.out.println("Symbol: " +key1);
                 if(nonTerminal.contains(key1))
                 {
-                	System.out.println("Command: G" );
+                	command ="Command: G";
                 }
                 else 
                 {
-                	System.out.println("Command: S" );
+                	command = "Command: S"  ;
                 }
-                System.out.println("Number: " +value);
-                System.out.println(" ");
+               // System.out.println("Number: " +value);
+              //  System.out.println(" ");
+                tempInt = Integer.parseInt(value);
+                SLRtable table = new SLRtable(key1,command,tempInt);
+                listSLRtable.add(table);
             }
+            int tempKey = Integer.parseInt(key);
+            slrTable.put(tempKey, listSLRtable);
 		} 
+		for(int i = 0; i < stateList.size(); i++)
+		{
+			System.out.println("--------------------------State " + i+ "----------------------------------");
+			for (List s : stateList.get(i))
+			{
+				int index = s.indexOf(".");
+				if(index == s.size()-1)
+				{
+					System.out.println("what going on?"+s);
+
+					//this is for P'
+					if(slrProduction.get(0).getLeftSide().equals(s.get(0)))
+					{
+		                SLRtable table = new SLRtable("$","Command accept");
+					}
+					else
+					{
+
+						
+						Iterator<String> it = followSet.get(s.get(0)).iterator();
+						while(it.hasNext()){
+							//SLRtable table = new SLRtable(it.next(),"Command R", );
+					        //System.out.println(it.next());
+					     }
+		               // SLRtable table = new SLRtable("$","Command R", );
+						
+					}
+					
+				}
+				
+			}
+			
+		}
 		
 		
 	}
@@ -161,8 +203,7 @@ public class compiler {
 			//Map <String, Set<List<String>>> returnMap = new LinkedHashMap <String, Set<List<String>>>();
 			
 			currentWorkingSet = stateList.get(i);
-			System.out.println("///////////////////////////////////////////");
-			System.out.println(currentWorkingSet);
+			
 			SLR.put(i,slrRecurrsion(currentWorkingSet));		
 			i++;	
 		}
@@ -186,7 +227,6 @@ public class compiler {
 				}
 			}			
 		}
-		System.out.print(tempListForMove);
 		//make the set in to List of because Set filter out duplicate and List
 		
 		for (int i = 0 ; i < tempListForMove.size(); i ++)
@@ -214,8 +254,7 @@ public class compiler {
 					}										
 				}			
 			}
-			System.out.println("This is for: "+tempListForMove.get(i));
-			System.out.println(tempSet);
+			
 			if(stateList.contains(tempSet))
 			{
 				int tempValue = stateList.indexOf(tempSet);
@@ -248,8 +287,6 @@ public class compiler {
 				tempSet.add(productionList);
 				if(nonTerminal.contains(slrProduction.get(i).getRightSide().get(1)))
 				{
-					System.out.println("Do i got here");
-					System.out.println(slrProduction.get(i).getRightSide().get(1));
 					recursionSLRstate (tempSet,slrProduction.get(i).getRightSide().get(1));
 				}
 			}
