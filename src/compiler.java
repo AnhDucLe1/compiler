@@ -26,7 +26,7 @@ public class compiler {
 	static String startSymbol;
 	static Set<String> stateSet = new LinkedHashSet<String>();
 	static List<Set<List<String>>> stateList = new ArrayList<Set<List<String>>>();
-	static Map<Set <List<String>>, Map<String, Integer> > SLR = new LinkedHashMap<>();
+	static Map<Integer, Map<String, Integer> > SLR = new LinkedHashMap<>();
 	static List<ProductionGrammar> production = new ArrayList<ProductionGrammar>();
 	static List<ProductionGrammar> slrProduction = new ArrayList<ProductionGrammar>();
 
@@ -93,6 +93,37 @@ public class compiler {
 		createSLRproduction();
 		//createSLR();
 		createSLRmap();
+		for(int i = 0; i < stateList.size(); i++)
+		{
+			System.out.println("--------------------------State " + i+ "----------------------------------");
+			System.out.println(stateList.get(i));
+			
+		}
+		for (Integer entry: SLR.keySet())
+		{
+            String key = entry.toString();
+            System.out.println("----------------------------State " +key +"--------------------------------");  
+            Map<String,Integer> tempMap = new  LinkedHashMap<String,Integer> ();
+            tempMap = SLR.get(entry);
+            for(String S : tempMap.keySet())
+            {
+            	String key1 = S.toString();
+                String value = tempMap.get(key1).toString();  
+                System.out.println("Symbol: " +key1);
+                if(nonTerminal.contains(key1))
+                {
+                	System.out.println("Command: G" );
+                }
+                else 
+                {
+                	System.out.println("Command: S" );
+                }
+                System.out.println("Number: " +value);
+                System.out.println(" ");
+            }
+		} 
+		
+		
 	}
 	public static void createSLRmap()
 	{
@@ -116,8 +147,13 @@ public class compiler {
 				}
 			}
 		}
-		stateList.add(stateSet);
-		int i = 0;
+		// initial State
+
+		Set<List<String>> initialSet = new LinkedHashSet<List<String>>();
+		recursionSLRstate(initialSet,slrProduction.get(0).getLeftSide());
+		stateList.add(initialSet);
+		//stateList.add(stateSet);
+		int i = 0;	
 		while (i < stateList.size())
 		{
 			//working set
@@ -125,16 +161,17 @@ public class compiler {
 			//Map <String, Set<List<String>>> returnMap = new LinkedHashMap <String, Set<List<String>>>();
 			
 			currentWorkingSet = stateList.get(i);
+			System.out.println("///////////////////////////////////////////");
 			System.out.println(currentWorkingSet);
-			SLR.put(currentWorkingSet,slrRecurrsion(currentWorkingSet));
-			i++;
+			SLR.put(i,slrRecurrsion(currentWorkingSet));		
+			i++;	
 		}
 	}
 	
 	public static Map<String,Integer> slrRecurrsion (Set<List<String>> currentWorkingSet)
 	{
 		Map <String, Integer> stateMap = new LinkedHashMap <String,Integer>();
-		Set<List<String>> innerSet = new LinkedHashSet <List<String>>();
+		//Set<List<String>> innerSet = new LinkedHashSet <List<String>>();
 		List<String> tempListForMove = new ArrayList <String>();
 		//create the List for possible moving terminal and nonTerminal
 		for(List<String> s : currentWorkingSet)
@@ -149,7 +186,7 @@ public class compiler {
 				}
 			}			
 		}
-		
+		System.out.print(tempListForMove);
 		//make the set in to List of because Set filter out duplicate and List
 		
 		for (int i = 0 ; i < tempListForMove.size(); i ++)
@@ -173,22 +210,51 @@ public class compiler {
 					//if after the Period is a Nontermial
 					if((s.size()-1 - indexOfPeriod) > 1 && nonTerminal.contains(s.get(indexOfPeriod +2)))
 					{		
-						tempList = recursionSLRstate(tempList,s.get(indexOfPeriod+2));
+						recursionSLRstate(tempSet, s.get(indexOfPeriod+2));
 					}										
-				}
-				
+				}			
 			}
-		}
-		System.out.println(tempListForMove.size());
-		
+			System.out.println("This is for: "+tempListForMove.get(i));
+			System.out.println(tempSet);
+			if(stateList.contains(tempSet))
+			{
+				int tempValue = stateList.indexOf(tempSet);
+				stateMap.put(tempListForMove.get(i), tempValue);
+			}
+			else
+			{
+				stateList.add(tempSet);
+				stateMap.put(tempListForMove.get(i),stateList.size()-1);
+			}
+			
+
+		}		
  		return stateMap;
 	}
 	//this recreate more state if the . before the nonTerminal
-	public Set<List<String>> recursionSLRstate (Set<List<String>> tempList, String CurrentNonTerminal)
+	public static void  recursionSLRstate (Set<List<String>> tempSet, String CurrentNonTerminal)
 	{
+		for(int i = 0; i < slrProduction.size(); i ++)
+		{
+			if (slrProduction.get(i).getLeftSide().equals(CurrentNonTerminal))
+			{
+				List<String> productionList = new ArrayList<String>();
+				productionList.add(slrProduction.get(i).getLeftSide());
+				productionList.addAll(slrProduction.get(i).getRightSide());
+				if(tempSet.contains(productionList))
+				{
+					continue;
+				}
+				tempSet.add(productionList);
+				if(nonTerminal.contains(slrProduction.get(i).getRightSide().get(1)))
+				{
+					System.out.println("Do i got here");
+					System.out.println(slrProduction.get(i).getRightSide().get(1));
+					recursionSLRstate (tempSet,slrProduction.get(i).getRightSide().get(1));
+				}
+			}
+		}
 		
-		
-		return tempList;
 	}
 	/*
 	public static void createSLR()
@@ -285,24 +351,31 @@ public class compiler {
         ProductionGrammar pg = new ProductionGrammar(intial, tempList);
 		slrProduction.add(pg);
 		for (int i = 0 ; i < production.size(); i ++)
-		{	
-				List<String> tempList1 = new ArrayList<String>();
-				tempList1.add(".");
-				for(int j =0;j < production.get(i).getRightSide().size();j++)
-				{
-					tempList1.add(production.get(i).getRightSide().get(j));
-				} 
-	            ProductionGrammar pg1 = new ProductionGrammar(production.get(i).getLeftSide(), tempList1);
-	            slrProduction.add(pg1);
+		{		
+			if(!production.get(i).getRightSide().contains("empty"))
+				{	
+					List<String> tempList1 = new ArrayList<String>();
+					tempList1.add(".");
+					for(int j =0;j < production.get(i).getRightSide().size();j++)
+					{
+						tempList1.add(production.get(i).getRightSide().get(j));
+					} 
+		            ProductionGrammar pg1 = new ProductionGrammar(production.get(i).getLeftSide(), tempList1);
+		            slrProduction.add(pg1);
+				}
+			else
+			{
+				continue;
+			}
 		}
 		
 		for (int i = 0 ; i < slrProduction.size(); i ++)
 		{			
 			List<String> test;
 			test = slrProduction.get(i).getRightSide();
-            System.out.println("Left side:" + slrProduction.get(i).getLeftSide() + " :: ");  
+            //System.out.println("Left side:" + slrProduction.get(i).getLeftSide() + " :: ");  
 			for(int j =0;j < test.size();j++){
-			   System.out.println(test.get(j));
+			  // System.out.println(test.get(j));
 			} 
 		}
 	}
