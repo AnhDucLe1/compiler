@@ -116,11 +116,11 @@ public class compiler {
                // System.out.println("Symbol: " +key1);
                 if(nonTerminal.contains(key1))
                 {
-                	command ="Command: G";
+                	command ="Command G";
                 }
                 else 
                 {
-                	command = "Command: S"  ;
+                	command = "Command S"  ;
                 }
                // System.out.println("Number: " +value);
               //  System.out.println(" ");
@@ -133,38 +133,60 @@ public class compiler {
 		} 
 		for(int i = 0; i < stateList.size(); i++)
 		{
+			List<SLRtable> listSLRtable = new ArrayList<SLRtable>();
+			listSLRtable = slrTable.get(i);
 			System.out.println("--------------------------State " + i+ "----------------------------------");
 			for (List s : stateList.get(i))
 			{
 				int index = s.indexOf(".");
 				if(index == s.size()-1)
 				{
+					int productionNumber = -1;
+					Set<String> S1 = new LinkedHashSet<String>(s);
+					for(int k = 0; k < slrProduction.size();k++)
+					{
+						Set<String> S2 = new LinkedHashSet<String>();
+						S2.add(slrProduction.get(k).getLeftSide());
+						S2.addAll(slrProduction.get(k).getRightSide());
+						if(S1.equals(S2))
+						{
+							productionNumber = k;
+						}
+					}
+
 					System.out.println("what going on?"+s);
 
 					//this is for P'
 					if(slrProduction.get(0).getLeftSide().equals(s.get(0)))
 					{
 		                SLRtable table = new SLRtable("$","Command accept");
+						listSLRtable.add(table);
+
 					}
 					else
 					{
-
 						
-						Iterator<String> it = followSet.get(s.get(0)).iterator();
-						while(it.hasNext()){
+						for(String stringItem : followSet.get(s.get(0)))
+						{
+							System.out.println(stringItem);
+				            SLRtable table = new SLRtable(stringItem,"Command R", productionNumber );
+							listSLRtable.add(table);
+						}
+						//Iterator<String> it = followSet.get(s.get(0)).iterator();
+						//while(it.hasNext()){
 							//SLRtable table = new SLRtable(it.next(),"Command R", );
 					        //System.out.println(it.next());
-					     }
-		               // SLRtable table = new SLRtable("$","Command R", );
-						
 					}
+					
 					
 				}
 				
 			}
+            slrTable.put(i, listSLRtable);
+
 			
 		}
-		
+		writeSLR();
 		
 	}
 	public static void createSLRmap()
@@ -713,7 +735,7 @@ public class compiler {
  {
 	 try {
 		 // put the path for folder you want to create
-		 String path = "C:\\Users\\Duc\\Desktop\\Compiler\\" ;
+		 String path = "C:\\Users\\Duc Le\\Desktop\\Compiler\\" ;
 		 path = path.concat(nameoftheText);
 		 path = path.concat(".txt");
 		 File file = new File(path);
@@ -732,6 +754,47 @@ public class compiler {
 	         bw.write(key + " :: " + value);  
 	         bw.newLine();
 			} 
+			bw.close();
+	} catch (IOException  e) {
+		e.printStackTrace();
+	}
+
+ }
+ public static void writeSLR()
+ {
+	 try {
+		 // put the path for folder you want to create
+		 String path = "C:\\Users\\Duc Le\\Desktop\\Compiler\\" ;
+		 path = path.concat("SLRtable");
+		 path = path.concat(".txt");
+		 File file = new File(path);
+
+			// if file doesnt exists, then create it
+		 if (!file.exists()) {
+		    file.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			for (int state: slrTable.keySet())
+			{
+				bw.write("----------------------------State "+state+"----------------------------");
+		        bw.newLine();
+				List<SLRtable> tempList = new ArrayList<SLRtable>();
+				tempList =slrTable.get(state);
+				for(int i = 0; i < tempList.size();i ++)
+				{
+					bw.write("Symbol "+tempList.get(i).getSymbol());
+			        bw.newLine();
+					bw.write(tempList.get(i).getCommand());
+			        bw.newLine();
+					if(tempList.get(i).getState() != -1)
+					bw.write("Number "+tempList.get(i).getState());
+			        bw.newLine();	
+			        bw.newLine();				
+
+				}				
+			} 			
 			bw.close();
 	} catch (IOException  e) {
 		e.printStackTrace();
