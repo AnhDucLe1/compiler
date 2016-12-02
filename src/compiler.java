@@ -73,16 +73,9 @@ public class compiler {
             String value = followSet.get(name).toString();  
             System.out.println("Key: " +key + " Terminal:" + value);  
 		} 
-		/*
-		for (int j = 0; j <production.size(); j ++)
-		{
-			System.out.print("Number: " +j);
-			System.out.print("LeftSide: "+ production.get(j).getLeftSide());
-			for (int k = 0; k <production.get(j).getRightSide().size(); k++)
-			System.out.print("RightSide: "+ production.get(j).getRightSide().get(k));
-			System.out.print("\n");
-		}
 		*/
+		
+		
 		//create new SLR production add state 0
 		
 		
@@ -131,6 +124,16 @@ public class compiler {
             int tempKey = Integer.parseInt(key);
             slrTable.put(tempKey, listSLRtable);
 		} 
+		
+		
+		for (int j = 0; j <slrProduction.size(); j ++)
+		{
+			System.out.print("Number: " +j);
+			System.out.print(slrProduction.get(j).getLeftSide() + "::");
+			for (int k = 0; k <slrProduction.get(j).getRightSide().size(); k++)
+			System.out.print(slrProduction.get(j).getRightSide().get(k) + " ");
+			System.out.print("\n");
+		}
 		for(int i = 0; i < stateList.size(); i++)
 		{
 			List<SLRtable> listSLRtable = new ArrayList<SLRtable>();
@@ -186,6 +189,7 @@ public class compiler {
 
 			
 		}
+		writeState();
 		writeSLR();
 		
 	}
@@ -307,10 +311,14 @@ public class compiler {
 					continue;
 				}
 				tempSet.add(productionList);
-				if(nonTerminal.contains(slrProduction.get(i).getRightSide().get(1)))
+				if(slrProduction.get(i).getRightSide().indexOf(".") == slrProduction.get(i).getRightSide().size()-1)
 				{
-					recursionSLRstate (tempSet,slrProduction.get(i).getRightSide().get(1));
+					continue;
 				}
+				else if(nonTerminal.contains(slrProduction.get(i).getRightSide().get(1)))
+					{
+						recursionSLRstate (tempSet,slrProduction.get(i).getRightSide().get(1));
+					}
 			}
 		}
 		
@@ -424,7 +432,22 @@ public class compiler {
 				}
 			else
 			{
-				continue;
+				List<String> tempList1 = new ArrayList<String>();
+				tempList1.add(".");
+				for(int j =0;j < production.get(i).getRightSide().size();j++)
+				{
+					if(!production.get(i).getRightSide().get(j).contains("empty"))
+					{
+					tempList1.add(production.get(i).getRightSide().get(j));
+					}
+					else
+					{
+						continue;
+					}
+				} 
+	            ProductionGrammar pg1 = new ProductionGrammar(production.get(i).getLeftSide(), tempList1);
+	            slrProduction.add(pg1);
+				
 			}
 		}
 		
@@ -759,6 +782,52 @@ public class compiler {
 		e.printStackTrace();
 	}
 
+ }
+ public static void writeState()
+ {
+	 try {
+		 // put the path for folder you want to create
+		 String path = "C:\\Users\\Duc Le\\Desktop\\Compiler\\" ;
+		 path = path.concat("state");
+		 path = path.concat(".txt");
+		 File file = new File(path);
+
+			// if file doesnt exists, then create it
+		 if (!file.exists()) {
+		    file.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			for (int i = 0; i < stateList.size(); i ++)
+			{
+				bw.write("----------------------------State "+i+"----------------------------");
+		        bw.newLine();
+		        for( List s : stateList.get(i))
+		        {
+		        	for(int j = 0; j < s.size() ; j ++)
+		        	{
+		        		if(j == 0)
+		        		{
+				        	bw.write(s.get(j).toString());
+				        	bw.write(" :: ");
+		        		}
+		        		else
+		        		{
+		        			bw.write(s.get(j).toString());
+		        			bw.write(" ");
+		        		}
+		        		
+		        	}
+		        	bw.newLine();
+		        }
+				bw.newLine();
+							
+			} 			
+			bw.close();
+	} catch (IOException  e) {
+		e.printStackTrace();
+	}
  }
  public static void writeSLR()
  {
